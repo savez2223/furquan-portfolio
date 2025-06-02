@@ -1,7 +1,39 @@
+"use client";
+
 import Navigation from "@/components/Navigation";
 import { Mail, Phone, MapPin, MessageCircle, Send } from "lucide-react";
 
+import { initializeApp } from "firebase/app";
+import { getFirestore, collection, addDoc } from "firebase/firestore";
+import { useState } from "react";
+import { db } from "@/firebase";
+
 const Contact = () => {
+  const [formData, setFormData] = useState({
+    name: "",
+    email: "",
+    subject: "",
+    message: "",
+  });
+
+  const [loading, setLoading] = useState(false);
+  const [success, setSuccess] = useState(false);
+
+  // ✅ Handle form submission and save to Firestore
+  const handleSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoading(true);
+
+    try {
+      await addDoc(collection(db, "contacts"), formData); // ✅ Add form data to "contacts" collection
+      setSuccess(true);
+      setFormData({ name: "", email: "", subject: "", message: "" }); // Reset form
+    } catch (error) {
+      console.error("Error saving message:", error);
+    }
+
+    setLoading(false);
+  };
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation />
@@ -92,7 +124,8 @@ const Contact = () => {
               Send a Message
             </h2>
 
-            <form className="space-y-4">
+            <form className="space-y-4" onSubmit={handleSubmit}>
+              {/* Full Name */}
               <div>
                 <label
                   htmlFor="name"
@@ -103,11 +136,17 @@ const Contact = () => {
                 <input
                   type="text"
                   id="name"
+                  value={formData.name}
+                  onChange={(e) =>
+                    setFormData({ ...formData, name: e.target.value })
+                  }
+                  required
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Your full name"
                 />
               </div>
 
+              {/* Email Address */}
               <div>
                 <label
                   htmlFor="email"
@@ -118,11 +157,17 @@ const Contact = () => {
                 <input
                   type="email"
                   id="email"
+                  value={formData.email}
+                  onChange={(e) =>
+                    setFormData({ ...formData, email: e.target.value })
+                  }
+                  required
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="your.email@example.com"
                 />
               </div>
 
+              {/* Subject */}
               <div>
                 <label
                   htmlFor="subject"
@@ -133,11 +178,17 @@ const Contact = () => {
                 <input
                   type="text"
                   id="subject"
+                  value={formData.subject}
+                  onChange={(e) =>
+                    setFormData({ ...formData, subject: e.target.value })
+                  }
+                  required
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Research collaboration inquiry"
                 />
               </div>
 
+              {/* Message */}
               <div>
                 <label
                   htmlFor="message"
@@ -148,18 +199,32 @@ const Contact = () => {
                 <textarea
                   id="message"
                   rows={6}
+                  value={formData.message}
+                  onChange={(e) =>
+                    setFormData({ ...formData, message: e.target.value })
+                  }
+                  required
                   className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500"
                   placeholder="Your message here..."
                 ></textarea>
               </div>
 
+              {/* Submit Button */}
               <button
                 type="submit"
+                disabled={loading}
                 className="w-full flex items-center justify-center px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
               >
                 <Send size={16} className="mr-2" />
-                Send Message
+                {loading ? "Sending..." : "Send Message"}
               </button>
+
+              {/* ✅ Success Message */}
+              {success && (
+                <p className="text-green-600 text-sm mt-2">
+                  Your message has been sent successfully!
+                </p>
+              )}
             </form>
           </div>
         </div>
@@ -222,9 +287,6 @@ const Contact = () => {
               OrcID
             </a>
           </div>
-          {/* <p className="text-sm text-gray-500 mt-6">
-            Developed by kamran S. All rights reserved.
-          </p> */}
         </div>
       </div>
     </div>
